@@ -138,4 +138,36 @@ public class AppCardDeliveryTest {
         $(withText("Доставка в выбранный город недоступна")).should(visible);
         $("[data-test-id='notification']").shouldNot(visible, Duration.ofSeconds(12));
     }
+
+    @Test
+    void shouldDataNextMonthAndCity() {
+        LocalDate currentDate = LocalDate.now();
+        int currentMonth = currentDate.getMonthValue();
+        int daysPlus = 50;
+
+        LocalDate deliveryDate = currentDate.plusDays(daysPlus);
+        int deliveryMonth = deliveryDate.getMonthValue();
+        int deliveryDayOfMonth = deliveryDate.getDayOfMonth();
+
+        String data = generateDate(daysPlus, "dd.MM.yyyy");
+
+        $("[data-test-id=city] input").setValue("Но");
+        $(withText("Новосибирск")).click();
+
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.DELETE);
+        $("[data-test-id=date] input").setValue(planningDate);
+        while (currentMonth < deliveryMonth) {
+            $x("//div[@class='calendar__arrow calendar__arrow_direction_right']").click();
+            currentMonth++;
+        }
+        String s = String.valueOf(deliveryDayOfMonth);
+
+        $x("//td[text()='" + s + "']").click();
+
+        $("[data-test-id=name] input").setValue("Гусь");
+        $("[data-test-id=phone] input").setValue("+79023004000");
+        $("[data-test-id=agreement]").click();
+        $$("button").find(exactText("Забронировать")).click();
+        $("[data-test-id='notification']").shouldBe(appear, Duration.ofSeconds(12)).shouldHave(text(data), visible);
+    }
 }
